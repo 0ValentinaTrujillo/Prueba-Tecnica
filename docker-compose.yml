@@ -1,0 +1,68 @@
+name: portal-equipo
+
+services:
+  # Persistencia: los datos sobreviven a "docker compose down" gracias al volumen.
+  mongo:
+    image: mongo:7
+    container_name: portal-mongo
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      - '27017:27017'
+    healthcheck:
+      test: ['CMD', 'mongosh', '--quiet', '--eval', "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  # AWS Lambda en local: imagen base oficial con Runtime Interface Emulator.
+  # Se invoca igual que en AWS, sin cuenta ni despliegue remoto.
+  lambda-metrics:
+    build: ./Lambda/metrics
+    container_name: portal-lambda-metrics
+    restart: unless-stopped
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/team_portal
+    ports:
+      # Puerto expuesto solo para poder invocar la Lambda a mano (ver README).
+      - '9000:8080'
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  api:
+    build: ./Backend
+    container_name: portal-api
+    restart: unless-stopped
+    environment:
+      PORT: 4000
+      MONGODB_URI: mongodb://mongo:27017/team_portal
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-cambiar-en-produccion}
+      JWT_EXPIRES_IN: 8h
+      CORS_ORIGIN: '*'
+      LAMBDA_METRICS_URL: http://lambda-metrics:8080/2015-03-31/functions/function/invocations
+      SEED_ON_START: 'true'
+      DEMO_ADMIN_PASSWORD: ${DEMO_ADMIN_PASSWORD:-Admin123!}
+      DEMO_USER_PASSWORD: ${DEMO_USER_PASSWORD:-User123!}
+    ports:
+      - '4000:4000'
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./Frontend
+      args:
+        VITE_API_URL: /api
+    container_name: portal-frontend
+    restart: unless-stopped
+    ports:
+      - '8080:80'
+    depends_on:
+      - api
+
+volumes:
+  mongo-data:

@@ -1,0 +1,10 @@
+{
+  "name": "dashboard-metrics-lambda",
+  "version": "1.0.0",
+  "description": "Función Lambda que calcula las métricas del dashboard",
+  "type": "module",
+  "main": "index.mjs",
+  "dependencies": {
+    "mongodb": "^6.12.0"
+  }
+}

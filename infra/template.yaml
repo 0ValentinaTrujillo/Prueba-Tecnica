@@ -1,0 +1,372 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Portal de equipo: API de usuarios y notas en EC2 (Docker), métricas del
+  dashboard en Lambda y frontend estático en S3 distribuido por CloudFront.
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: portal-equipo
+    Description: Prefijo para los nombres de los recursos.
+
+  RepositoryUrl:
+    Type: String
+    Description: >
+      URL del repositorio Git que la instancia EC2 clona para construir la API
+      (por ejemplo https://github.com/usuario/prueba-tecnica.git).
+
+  RepositoryBranch:
+    Type: String
+    Default: main
+    Description: Rama del repositorio que se despliega en EC2.
+
+  InstanceType:
+    Type: String
+    Default: t3.small
+    AllowedValues: [t3.micro, t3.small, t3.medium]
+    Description: Tipo de instancia EC2 para la API.
+
+  JwtSecret:
+    Type: String
+    NoEcho: true
+    MinLength: 16
+    Description: Secreto usado para firmar los JWT de la API.
+
+  DemoAdminPassword:
+    Type: String
+    NoEcho: true
+    Default: Admin123!
+    Description: Contraseña de la cuenta de demostración de administrador.
+
+  DemoUserPassword:
+    Type: String
+    NoEcho: true
+    Default: User123!
+    Description: Contraseña de la cuenta de demostración de usuario.
+
+  MongoPrivateIp:
+    Type: String
+    Default: 10.0.1.10
+    Description: >
+      IP privada fija de la instancia EC2 dentro de la subred pública. La Lambda
+      la usa para conectarse a MongoDB; al ser fija se evita una dependencia
+      circular entre la instancia y la función.
+
+  LatestAmiId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-6.1-x86_64
+    Description: AMI de Amazon Linux 2023 (se resuelve automáticamente).
+
+Resources:
+  # ---------------------------------------------------------------- Red -----
+  Vpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-vpc'
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-igw'
+
+  GatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref Vpc
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: !Select [0, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-public-a'
+
+  PublicSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: 10.0.2.0/24
+      AvailabilityZone: !Select [1, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-public-b'
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: GatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  SubnetARouteAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnetA
+      RouteTableId: !Ref PublicRouteTable
+
+  SubnetBRouteAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnetB
+      RouteTableId: !Ref PublicRouteTable
+
+  LambdaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Lambda de métricas
+      VpcId: !Ref Vpc
+
+  ApiSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: API en EC2
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        # La API se publica a través de CloudFront (comportamiento /api/*).
+        - IpProtocol: tcp
+          FromPort: 4000
+          ToPort: 4000
+          CidrIp: 0.0.0.0/0
+          Description: API HTTP
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-api-sg'
+
+  # MongoDB corre en la propia instancia; solo la Lambda puede alcanzarlo.
+  MongoFromLambdaIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref ApiSecurityGroup
+      IpProtocol: tcp
+      FromPort: 27017
+      ToPort: 27017
+      SourceSecurityGroupId: !Ref LambdaSecurityGroup
+      Description: MongoDB desde la Lambda de métricas
+
+  # ---------------------------------------------------------- EC2 (API) -----
+  ApiInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        # Acceso por SSM Session Manager: no hace falta abrir el puerto 22.
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+
+  ApiInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref ApiInstanceRole
+
+  ApiInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref LatestAmiId
+      InstanceType: !Ref InstanceType
+      IamInstanceProfile: !Ref ApiInstanceProfile
+      SubnetId: !Ref PublicSubnetA
+      PrivateIpAddress: !Ref MongoPrivateIp
+      SecurityGroupIds:
+        - !Ref ApiSecurityGroup
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-api'
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -euxo pipefail
+
+          dnf install -y docker git
+          systemctl enable --now docker
+
+          # MongoDB con volumen persistente en la propia instancia.
+          docker network create portal || true
+          docker volume create portal-mongo-data
+          docker run -d --name mongo --network portal --restart unless-stopped \
+            -v portal-mongo-data:/data/db \
+            -p 27017:27017 \
+            mongo:7
+
+          # API construida desde el repositorio del proyecto.
+          git clone --branch ${RepositoryBranch} --depth 1 ${RepositoryUrl} /opt/app
+          docker build -t portal-api /opt/app/Backend
+          docker run -d --name api --network portal --restart unless-stopped \
+            -p 4000:4000 \
+            -e PORT=4000 \
+            -e MONGODB_URI=mongodb://mongo:27017/team_portal \
+            -e JWT_SECRET='${JwtSecret}' \
+            -e CORS_ORIGIN='*' \
+            -e LAMBDA_METRICS_URL='${MetricsFunctionUrl.FunctionUrl}' \
+            -e SEED_ON_START=true \
+            -e DEMO_ADMIN_PASSWORD='${DemoAdminPassword}' \
+            -e DEMO_USER_PASSWORD='${DemoUserPassword}' \
+            portal-api
+
+  # ------------------------------------------------- Lambda de métricas -----
+  MetricsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub '${ProjectName}-metrics'
+      CodeUri: ../Lambda/metrics/
+      Handler: index.handler
+      Runtime: nodejs20.x
+      MemorySize: 256
+      Timeout: 15
+      Environment:
+        Variables:
+          MONGODB_URI: !Sub 'mongodb://${MongoPrivateIp}:27017/team_portal'
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref LambdaSecurityGroup
+        SubnetIds:
+          - !Ref PublicSubnetA
+          - !Ref PublicSubnetB
+
+  MetricsFunctionUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      TargetFunctionArn: !GetAtt MetricsFunction.Arn
+      # La invoca la API desde EC2. Devuelve solo recuentos agregados de notas.
+      AuthType: NONE
+
+  MetricsFunctionUrlPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref MetricsFunction
+      Action: lambda:InvokeFunctionUrl
+      Principal: '*'
+      FunctionUrlAuthType: NONE
+
+  # ------------------------------------------ S3 + CloudFront (frontend) ----
+  FrontendBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub '${ProjectName}-frontend-${AWS::AccountId}'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  FrontendOac:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub '${ProjectName}-oac'
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  FrontendDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: !Sub '${ProjectName} frontend'
+        DefaultRootObject: index.html
+        HttpVersion: http2
+        Origins:
+          - Id: s3-frontend
+            DomainName: !GetAtt FrontendBucket.RegionalDomainName
+            OriginAccessControlId: !GetAtt FrontendOac.Id
+            S3OriginConfig:
+              OriginAccessIdentity: ''
+          - Id: ec2-api
+            DomainName: !GetAtt ApiInstance.PublicDnsName
+            CustomOriginConfig:
+              OriginProtocolPolicy: http-only
+              HTTPPort: 4000
+              OriginSSLProtocols: [TLSv1.2]
+        DefaultCacheBehavior:
+          TargetOriginId: s3-frontend
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD, OPTIONS]
+          # Managed-CachingOptimized
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+        CacheBehaviors:
+          - PathPattern: /api/*
+            TargetOriginId: ec2-api
+            ViewerProtocolPolicy: https-only
+            AllowedMethods: [GET, HEAD, OPTIONS, PUT, POST, PATCH, DELETE]
+            # Managed-CachingDisabled + Managed-AllViewer
+            CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
+            OriginRequestPolicyId: 216adef6-36b1-42a9-a2b3-e7d3c0bea5e5
+        CustomErrorResponses:
+          # SPA: las rutas del router se resuelven en el cliente.
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+
+  FrontendBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FrontendBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub '${FrontendBucket.Arn}/*'
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${FrontendDistribution}'
+
+Outputs:
+  FrontendUrl:
+    Description: URL pública de la aplicación (CloudFront).
+    Value: !Sub 'https://${FrontendDistribution.DomainName}'
+
+  FrontendBucketName:
+    Description: Bucket S3 donde se sube el build del frontend.
+    Value: !Ref FrontendBucket
+
+  DistributionId:
+    Description: Id de la distribución CloudFront (para invalidar la caché).
+    Value: !Ref FrontendDistribution
+
+  ApiPublicDns:
+    Description: DNS público de la instancia EC2 con la API.
+    Value: !GetAtt ApiInstance.PublicDnsName
+
+  ApiHealthUrl:
+    Description: Comprobación de salud de la API.
+    Value: !Sub 'http://${ApiInstance.PublicDnsName}:4000/api/health'
+
+  MetricsFunctionUrl:
+    Description: Function URL de la Lambda de métricas.
+    Value: !GetAtt MetricsFunctionUrl.FunctionUrl
