@@ -1,6 +1,15 @@
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-dotenv.config({ quiet: true });
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Ruta absoluta al .env de Backend/, para que funcione sea cual sea el cwd
+// desde el que se arranque (npm start, npm run seed, node src/server.js...).
+dotenv.config({
+  path: path.resolve(__dirname, '../../.env'),
+  quiet: true,
+});
 
 const required = (name, fallback) => {
   const value = process.env[name] ?? fallback;

@@ -4,6 +4,9 @@
   "description": "Función Lambda que calcula las métricas del dashboard",
   "type": "module",
   "main": "index.mjs",
+  "scripts": {
+    "start:local": "node --env-file=../../Backend/.env local-server.mjs"
+  },
   "dependencies": {
     "mongodb": "^6.12.0"
   }

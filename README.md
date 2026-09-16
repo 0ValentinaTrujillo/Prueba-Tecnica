@@ -249,17 +249,19 @@ sam local invoke MetricsFunction \
 Con un MongoDB accesible en `mongodb://localhost:27017`:
 
 ```bash
-# 1. Lambda de métricas (contenedor o `sam local start-lambda`)
-#    o bien deja LAMBDA_METRICS_URL apuntando al RIE ya levantado.
+# 1. Lambda de métricas, sin Docker ni SAM: emulador local del RIE
+cd Lambda/metrics
+npm install
+npm run start:local         # http://localhost:9000, mismo handler que en AWS
 
-# 2. API
-cd Backend
-cp .env.example .env        # ajusta MONGODB_URI a localhost
+# 2. API (en otra terminal)
+cd ../../Backend
+cp .env.example .env        # ajusta MONGODB_URI y deja LAMBDA_METRICS_URL en :9000
 npm install
 npm run seed                # cuentas de demostración
 npm start
 
-# 3. Frontend
+# 3. Frontend (en otra terminal)
 cd ../Frontend
 npm install
 npm run dev                 # http://localhost:5173, proxy /api → :4000
