@@ -11,7 +11,7 @@ const noteSchema = new mongoose.Schema(
       x: { type: Number, default: 40, min: 0 },
       y: { type: Number, default: 40, min: 0 },
     },
-    color: { type: String, default: '#ffe08a' },
+    color: { type: String, default: '#cdb4db' },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   },

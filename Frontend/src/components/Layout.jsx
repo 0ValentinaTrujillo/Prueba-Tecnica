@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import { TeamIcon } from './icons.jsx';
 
 const ROLE_LABEL = { admin: 'Administrador', user: 'Usuario' };
 
@@ -16,9 +17,7 @@ export default function Layout() {
     <div className="app-shell">
       <header className="app-header">
         <div className="brand">
-          <span className="brand-mark" aria-hidden="true">
-            ◲
-          </span>
+          <TeamIcon className="brand-mark" />
           Portal de equipo
         </div>
 
@@ -33,7 +32,7 @@ export default function Layout() {
             {user.name}
             <small>{ROLE_LABEL[user.role]}</small>
           </span>
-          <button type="button" className="btn btn-ghost" onClick={handleLogout}>
+          <button type="button" className="btn-logout" onClick={handleLogout}>
             Cerrar sesión
           </button>
         </div>

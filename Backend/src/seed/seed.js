@@ -24,21 +24,21 @@ const DEMO_NOTES = [
     text: 'Arrastra esta nota por el lienzo: la posición se guarda sola.',
     status: 'hecho',
     position: { x: 60, y: 80 },
-    color: '#ffe08a',
+    color: '#cdb4db',
   },
   {
     title: 'Editar una nota',
     text: 'Cambia el título, el texto o el estado y pulsa Guardar.',
     status: 'en_curso',
     position: { x: 380, y: 140 },
-    color: '#bde0fe',
+    color: '#ffafcc',
   },
   {
     title: 'Crear notas',
     text: 'Usa "Nueva nota" para añadir tantas como necesites.',
     status: 'pendiente',
     position: { x: 700, y: 90 },
-    color: '#c8f7c5',
+    color: '#a2d2ff',
   },
 ];
 

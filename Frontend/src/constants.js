@@ -4,4 +4,14 @@ export const NOTE_STATUSES = [
   { value: 'hecho', label: 'Hecho' },
 ];
 
-export const NOTE_COLORS = ['#ffe08a', '#bde0fe', '#c8f7c5', '#ffc9de', '#e5d4ff'];
+// Paleta pastel del tablero. Al crear una nota se elige un color al azar.
+export const NOTE_COLORS = [
+  '#cdb4db', // púrpura
+  '#ffc8dd', // rosado claro
+  '#ffafcc', // rosado medio
+  '#bde0fe', // azul claro
+  '#a2d2ff', // azul más claro
+];
+
+/** Color por defecto cuando una nota llega sin color. */
+export const DEFAULT_NOTE_COLOR = NOTE_COLORS[0];

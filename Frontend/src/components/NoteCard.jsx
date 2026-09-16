@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { NOTE_STATUSES } from '../constants.js';
+import { DEFAULT_NOTE_COLOR, NOTE_STATUSES } from '../constants.js';
 
 /**
  * Nota tipo post-it. El título, el texto y el estado se editan sobre la propia
@@ -33,7 +33,7 @@ export default function NoteCard({ note, dragging, onDragStart, onSave, onDelete
       style={{
         left: note.position.x,
         top: note.position.y,
-        background: note.color ?? '#ffe08a',
+        background: note.color ?? DEFAULT_NOTE_COLOR,
       }}
     >
       <header className="note-handle" onMouseDown={(event) => onDragStart(event, note)}>

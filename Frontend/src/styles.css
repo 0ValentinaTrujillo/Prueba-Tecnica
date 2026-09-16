@@ -1,11 +1,13 @@
 :root {
-  --bg: #f4f6fb;
+  /* Mulish es el nombre actual de la familia Muli en Google Fonts (renombrada en 2020). */
+  --font: 'Mulish', 'Muli', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --bg: #f8f9ff;
   --surface: #ffffff;
-  --border: #dfe3ec;
-  --text: #1f2430;
-  --muted: #6b7280;
-  --primary: #3b5bdb;
-  --primary-dark: #2f4bbd;
+  --border: #e8ecf1;
+  --text: #2c3e50;
+  --muted: #666666;
+  --primary: #5b8fc4;
+  --primary-dark: #4a7aab;
   --danger: #d64545;
   --radius: 10px;
   --shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 8px 24px rgba(16, 24, 40, 0.08);
@@ -17,7 +19,7 @@
 
 body {
   margin: 0;
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-family: var(--font);
   background: var(--bg);
   color: var(--text);
 }
@@ -48,7 +50,7 @@ h2 {
 /* --- Botones --- */
 .btn {
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: 20px;
   padding: 0.5rem 0.9rem;
   font-size: 0.875rem;
   font-weight: 600;
@@ -89,6 +91,13 @@ h2 {
 .btn-small {
   padding: 0.3rem 0.6rem;
   font-size: 0.78rem;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
 }
 
 input,
@@ -134,35 +143,159 @@ textarea:focus {
   display: grid;
   place-items: center;
   padding: 1.5rem;
-  background: linear-gradient(140deg, #eef2ff, #f7f9fc 60%);
+  background: #f5f7fa;
 }
 
 .login-card {
-  width: min(400px, 100%);
-  background: var(--surface);
-  border-radius: 14px;
-  box-shadow: var(--shadow);
-  padding: 2rem;
-  display: grid;
-  gap: 0.5rem;
+  display: flex;
+  width: min(900px, 100%);
+  min-height: 500px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
 
-.login-card label {
-  font-size: 0.8rem;
+/* Panel ilustrado: ~46% del ancho, alto completo de la tarjeta. */
+.login-media {
+  flex: 0 0 46%;
+  display: flex;
+}
+
+.login-artwork {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.login-form {
+  flex: 1 1 54%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 60px;
+}
+
+.login-title {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #333333;
+}
+
+.login-subtitle {
+  margin: 0.4rem 0 1.75rem;
+  color: #666666;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.login-label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 14px;
   font-weight: 600;
-  margin-top: 0.5rem;
+  color: #666666;
 }
 
-.login-card .btn-primary {
-  margin-top: 1rem;
+.login-input {
+  width: 100%;
+  font-size: 16px;
+  padding: 15px 20px;
+  margin-bottom: 20px;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  background: #f9f9f9;
+  color: #333333;
+  transition: border-color 0.3s, background 0.3s, box-shadow 0.3s;
+}
+
+.login-input:hover {
+  border-color: #5b8fc4;
+}
+
+.login-input:focus {
+  outline: 2px solid #5b8fc4;
+  outline-offset: 1px;
+  border-color: #5b8fc4;
+  background: #ffffff;
+}
+
+.login-input-error {
+  border-color: #e74c3c;
+}
+
+.login-error {
+  margin: -0.4rem 0 1rem;
+  color: #e74c3c;
+  font-size: 0.875rem;
+}
+
+.login-submit {
+  width: 100%;
+  padding: 15px;
+  border: none;
+  border-radius: 20px;
+  background: #5b8fc4;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.3s, box-shadow 0.3s, transform 0.3s;
+}
+
+.login-submit:not(:disabled):hover {
+  background: #4a7cb0;
+  box-shadow: 0 8px 20px rgba(91, 143, 196, 0.4);
+  transform: translateY(-1px);
+}
+
+.login-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .demo-accounts {
   display: grid;
   gap: 0.35rem;
-  margin-top: 1rem;
-  border-top: 1px solid var(--border);
+  margin-top: 1.5rem;
+  border-top: 1px solid #e0e0e0;
   padding-top: 1rem;
+}
+
+/* Móvil y tablet estrecha: ilustración arriba, formulario debajo. */
+@media (max-width: 820px) {
+  .login-card {
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .login-media {
+    flex: 0 0 200px;
+    max-height: 200px;
+  }
+
+  .login-form {
+    padding: 40px 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-form {
+    padding: 32px 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-input,
+  .login-submit {
+    transition: none;
+  }
+
+  .login-submit:not(:disabled):hover {
+    transform: none;
+  }
 }
 
 /* --- Layout --- */
@@ -175,10 +308,11 @@ textarea:focus {
 .app-header {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
-  padding: 0.75rem 1.5rem;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  gap: 2rem;
+  height: 70px;
+  padding: 0 2rem;
+  background: #ffffff;
+  border-bottom: 1px solid #e8ecf1;
   position: sticky;
   top: 0;
   z-index: 10;
@@ -186,44 +320,83 @@ textarea:focus {
 
 .brand {
   font-weight: 700;
+  color: #2c3e50;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.65rem;
+  white-space: nowrap;
 }
 
 .brand-mark {
-  color: var(--primary);
-  font-size: 1.3rem;
+  width: 26px;
+  height: 26px;
+  color: #0ea5e9;
+  transition: transform 0.3s;
+}
+
+.brand:hover .brand-mark {
+  transform: scale(1.08);
 }
 
 .app-nav {
   display: flex;
-  gap: 0.25rem;
+  gap: 0.35rem;
   flex: 1;
 }
 
 .app-nav a {
+  position: relative;
   text-decoration: none;
-  color: var(--muted);
-  padding: 0.45rem 0.8rem;
-  border-radius: 8px;
+  color: #666666;
+  padding: 0.55rem 0.9rem;
   font-size: 0.9rem;
   font-weight: 600;
+  transition: color 0.3s;
 }
 
-.app-nav a:hover {
-  background: #eef1f8;
-}
-
+.app-nav a:hover,
 .app-nav a.active {
-  background: #e7ecff;
-  color: var(--primary);
+  color: #0ea5e9;
+}
+
+/*
+ * Subrayado: sin alto en reposo, 2px al pasar por encima y 3px fijo cuando el
+ * tab está activo. En ningún estado hay fondo.
+ */
+/* El subrayado marca solo el tab activo; el hover cambia únicamente el color. */
+.app-nav a.active::after {
+  content: '';
+  position: absolute;
+  left: 0.9rem;
+  right: 0.9rem;
+  bottom: 0;
+  height: 3px;
+  border-radius: 999px;
+  background: #0ea5e9;
 }
 
 .session {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+}
+
+.btn-logout {
+  border: 1px solid #e8ecf1;
+  background: #ffffff;
+  color: #666666;
+  border-radius: 20px;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.3s, color 0.3s, background 0.3s;
+}
+
+.btn-logout:hover {
+  border-color: #cdb4db;
+  color: #2c3e50;
+  background: #faf8fd;
 }
 
 .session-user {
@@ -241,15 +414,43 @@ textarea:focus {
 
 .app-main {
   flex: 1;
-  padding: 1.5rem;
+  padding: 40px;
+  background: #ffffff;
 }
 
 .page {
-  max-width: 1200px;
+  max-width: 1600px;
   margin: 0 auto;
   display: grid;
-  gap: 1rem;
+  gap: 32px;
   align-content: start;
+}
+
+/* El dashboard se extiende a todo el ancho; el resto de páginas sigue acotado. */
+.page.dashboard {
+  max-width: none;
+}
+
+.page-title {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin: 0;
+  font-size: 32px;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.page-subtitle {
+  margin: 0.4rem 0 0;
+  font-size: 14px;
+  color: #888888;
+}
+
+@media (max-width: 768px) {
+  .app-main {
+    padding: 24px;
+  }
 }
 
 .page-header {
@@ -272,44 +473,167 @@ textarea:focus {
   padding: 1.25rem;
 }
 
-.panel-footer {
-  margin-top: 1rem;
-  border-top: 1px solid var(--border);
-  padding-top: 0.6rem;
+/* --- Dashboard --- */
+
+@keyframes dash-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
-/* --- Dashboard --- */
+@keyframes dash-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes bar-grow {
+  from {
+    width: 0;
+  }
+  to {
+    width: var(--bar-width, 0%);
+  }
+}
+
+.dashboard-body {
+  display: grid;
+  gap: 32px;
+}
+
+/* --- Cabecera --- */
+.dashboard .page-title {
+  font-size: 44px;
+  font-weight: 800;
+  color: #2c3e50;
+}
+
+.dashboard .page-subtitle {
+  font-size: 15px;
+  color: #888888;
+}
+
+/* --- Botón Actualizar --- */
+.btn-refresh {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  height: 44px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 20px;
+  background: #0ea5e9;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(14, 165, 233, 0.3);
+  transition: background 0.3s, box-shadow 0.3s, transform 0.3s;
+}
+
+.btn-refresh:not(:disabled):hover {
+  background: #0284c7;
+  transform: translateY(-3px);
+  box-shadow: 0 14px 32px rgba(14, 165, 233, 0.42);
+}
+
+.btn-refresh:disabled {
+  opacity: 0.75;
+  cursor: progress;
+}
+
+.btn-refresh-icon {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+
+.btn-refresh-spinner {
+  animation: dash-spin 0.8s linear infinite;
+}
+
+/* --- Tarjetas compactas --- */
 .metric-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
 }
 
 .metric-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1.1rem;
+  min-height: 116px;
+  padding: 20px 20px 22px;
+  background: #ffffff;
+  border: 1px solid #f0f0f0;
+  border-radius: 16px;
   display: grid;
-  gap: 0.2rem;
+  gap: 0.1rem;
+  align-content: start;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.3s, transform 0.3s;
+  animation: dash-rise 0.5s ease-out both;
+  animation-delay: var(--stagger, 0ms);
 }
 
-.metric-card-total {
-  border-color: var(--primary);
-  box-shadow: inset 0 0 0 1px rgba(59, 91, 219, 0.15);
+.metric-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Color de la cifra de cada métrica. */
+.metric-card[data-metric='total'] {
+  --accent: #6366f1;
+}
+
+.metric-card[data-metric='pendiente'] {
+  --accent: #f43f5e;
+}
+
+.metric-card[data-metric='en_curso'] {
+  --accent: #0ea5e9;
+}
+
+.metric-card[data-metric='hecho'] {
+  --accent: #10b981;
 }
 
 .metric-label {
-  font-size: 0.8rem;
-  color: var(--muted);
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.5px;
+  color: #999999;
 }
 
 .metric-value {
-  font-size: 2rem;
+  font-size: 48px;
+  font-weight: 700;
   line-height: 1.1;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Gráfico --- */
+.chart-panel {
+  border: 1px solid #f0f0f0;
+  border-radius: 16px;
+  padding: 28px;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  animation: dash-rise 0.5s ease-out both;
+  animation-delay: var(--stagger, 0ms);
+}
+
+.chart-title {
+  margin: 0 0 1.75rem;
+  font-size: 18px;
+  font-weight: 700;
+  color: #2c3e50;
 }
 
 .bar-list {
@@ -317,19 +641,34 @@ textarea:focus {
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 0.6rem;
+  gap: 1.5rem;
 }
 
 .bar-list li {
   display: grid;
-  grid-template-columns: 110px 1fr 40px;
+  grid-template-columns: 160px 1fr 56px;
   align-items: center;
-  gap: 0.75rem;
-  font-size: 0.875rem;
+  gap: 16px;
+  font-size: 14px;
+}
+
+.bar-label {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: #666666;
+  font-weight: 600;
+}
+
+.bar-label-icon {
+  width: 17px;
+  height: 17px;
+  flex: none;
+  color: var(--accent);
 }
 
 .bar-track {
-  background: #eef1f8;
+  background: #f4f6f9;
   border-radius: 999px;
   height: 12px;
   overflow: hidden;
@@ -338,13 +677,94 @@ textarea:focus {
 .bar-fill {
   display: block;
   height: 100%;
+  width: var(--bar-width, 0%);
   border-radius: 999px;
-  transition: width 0.3s ease;
+  background: var(--accent);
+  animation: bar-grow 1.2s ease-out both;
 }
 
 .bar-value {
   text-align: right;
+  font-size: 16px;
   font-weight: 600;
+  color: #888888;
+  font-variant-numeric: tabular-nums;
+}
+
+.bar-list li[data-metric='pendiente'] {
+  --accent: #f43f5e;
+}
+
+.bar-list li[data-metric='en_curso'] {
+  --accent: #0ea5e9;
+}
+
+.bar-list li[data-metric='hecho'] {
+  --accent: #10b981;
+}
+
+.dashboard-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 32px;
+  font-size: 12px;
+  color: #aaaaaa;
+}
+
+.dashboard-meta-icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+  .metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard .page-title {
+    font-size: 30px;
+  }
+}
+
+@media (max-width: 480px) {
+  .metric-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .metric-card {
+    min-height: 0;
+  }
+
+  .chart-panel {
+    padding: 22px;
+  }
+
+  .bar-list li {
+    grid-template-columns: 104px 1fr 48px;
+    gap: 0.7rem;
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .metric-card,
+  .chart-panel,
+  .bar-fill,
+  .btn-refresh-spinner {
+    animation: none;
+  }
+
+  .metric-card,
+  .btn-refresh {
+    transition: none;
+  }
+
+  .metric-card:hover,
+  .btn-refresh:not(:disabled):hover {
+    transform: none;
+  }
 }
 
 /* --- Tablero --- */
@@ -408,12 +828,12 @@ textarea:focus {
 }
 
 .note-badge {
-  font-size: 0.68rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  text-transform: uppercase;
-  padding: 0.15rem 0.45rem;
+  letter-spacing: 0.01em;
+  padding: 0.15rem 0.5rem;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.65);
+  background: rgba(255, 255, 255, 0.78);
 }
 
 .note-badge-pendiente {
@@ -430,20 +850,20 @@ textarea:focus {
 
 .note-title {
   font-weight: 700;
-  background: rgba(255, 255, 255, 0.65);
-  border-color: rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.82);
+  border-color: rgba(0, 0, 0, 0.1);
 }
 
 .note-text {
   min-height: 84px;
   resize: vertical;
-  background: rgba(255, 255, 255, 0.65);
-  border-color: rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.82);
+  border-color: rgba(0, 0, 0, 0.1);
 }
 
 .note-status {
-  background: rgba(255, 255, 255, 0.65);
-  border-color: rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.82);
+  border-color: rgba(0, 0, 0, 0.1);
 }
 
 .note-actions {
