@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useToast } from '../context/ToastContext.jsx';
 import NoteCard from '../components/NoteCard.jsx';
 import ConfirmDialog from '../components/ConfirmDialog.jsx';
 import { PlusIcon } from '../components/icons.jsx';
@@ -15,12 +16,12 @@ const clamp = (value, max) => Math.min(Math.max(Math.round(value), 0), max);
 
 export default function BoardPage() {
   const { handleAuthError } = useAuth();
+  const toast = useToast();
   const canvasRef = useRef(null);
   const dragRef = useRef(null);
 
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [draggingId, setDraggingId] = useState(null);
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
 
@@ -29,11 +30,11 @@ export default function BoardPage() {
       const { notes: list } = await api.listNotes();
       setNotes(list);
     } catch (err) {
-      if (!handleAuthError(err)) setError(err.message);
+      if (!handleAuthError(err)) toast.error(err.message);
     } finally {
       setLoading(false);
     }
-  }, [handleAuthError]);
+  }, [handleAuthError, toast]);
 
   useEffect(() => {
     load();
@@ -85,7 +86,7 @@ export default function BoardPage() {
         const { note } = await api.moveNote(drag.id, drag.position);
         setNotes((current) => current.map((item) => (item.id === note.id ? note : item)));
       } catch (err) {
-        if (!handleAuthError(err)) setError(`No se pudo guardar la posición: ${err.message}`);
+        if (!handleAuthError(err)) toast.error(`No se pudo guardar la posición: ${err.message}`);
         load();
       }
     }
@@ -96,11 +97,10 @@ export default function BoardPage() {
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerup', onPointerUp);
     };
-  }, [draggingId, handleAuthError, load]);
+  }, [draggingId, handleAuthError, load, toast]);
 
   // --- Acciones sobre notas -----------------------------------------------
   async function handleCreate() {
-    setError('');
     const scroller = canvasRef.current?.parentElement;
     try {
       const { note } = await api.createNote({
@@ -115,29 +115,27 @@ export default function BoardPage() {
       });
       setNotes((current) => [...current, note]);
     } catch (err) {
-      if (!handleAuthError(err)) setError(err.message);
+      if (!handleAuthError(err)) toast.error(err.message);
     }
   }
 
   async function handleSave(id, draft) {
-    setError('');
     try {
       const { note } = await api.updateNote(id, draft);
       setNotes((current) => current.map((item) => (item.id === id ? note : item)));
     } catch (err) {
-      if (!handleAuthError(err)) setError(err.message);
+      if (!handleAuthError(err)) toast.error(err.message);
     }
   }
 
   async function confirmDelete() {
     const id = pendingDeleteId;
     setPendingDeleteId(null);
-    setError('');
     try {
       await api.deleteNote(id);
       setNotes((current) => current.filter((item) => item.id !== id));
     } catch (err) {
-      if (!handleAuthError(err)) setError(err.message);
+      if (!handleAuthError(err)) toast.error(err.message);
     }
   }
 
@@ -151,7 +149,7 @@ export default function BoardPage() {
           </p>
         </div>
         <div className="page-actions">
-          <button type="button" className="btn btn-ghost" onClick={load}>
+          <button type="button" className="btn btn-logout" onClick={load}>
             Recargar
           </button>
           <button type="button" className="btn-refresh" onClick={handleCreate}>
@@ -161,7 +159,6 @@ export default function BoardPage() {
         </div>
       </header>
 
-      {error && <p className="form-error">{error}</p>}
       {loading && <div className="centered-state">Cargando tablero…</div>}
 
       <div className="canvas-scroller">

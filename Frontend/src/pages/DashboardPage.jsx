@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useToast } from '../context/ToastContext.jsx';
 import {
   ClockIcon,
   DoneIcon,
@@ -117,21 +118,20 @@ function Bar({ status, label, icon: Icon, percentage }) {
 
 export default function DashboardPage() {
   const { handleAuthError } = useAuth();
+  const toast = useToast();
   const [metrics, setMetrics] = useState(null);
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
-    setError('');
     try {
       setMetrics(await api.metrics());
     } catch (err) {
-      if (!handleAuthError(err)) setError(err.message);
+      if (!handleAuthError(err)) toast.error(err.message);
     } finally {
       setLoading(false);
     }
-  }, [handleAuthError]);
+  }, [handleAuthError, toast]);
 
   useEffect(() => {
     load();
@@ -156,8 +156,6 @@ export default function DashboardPage() {
           {loading ? 'Actualizando…' : 'Actualizar'}
         </button>
       </header>
-
-      {error && <p className="form-error">{error}</p>}
 
       {metrics && (
         <div className="dashboard-body">
@@ -199,6 +197,9 @@ export default function DashboardPage() {
       )}
 
       {!metrics && loading && <div className="centered-state">Cargando métricas…</div>}
+      {!metrics && !loading && (
+        <div className="centered-state">No se pudieron cargar las métricas.</div>
+      )}
     </section>
   );
 }

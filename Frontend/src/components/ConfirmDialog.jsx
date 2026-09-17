@@ -42,7 +42,7 @@ export default function ConfirmDialog({
       </p>
 
       <div className="modal-actions">
-        <button type="button" className="btn btn-ghost" onClick={onCancel}>
+        <button type="button" className="btn btn-logout" onClick={onCancel}>
           {cancelLabel}
         </button>
         <button

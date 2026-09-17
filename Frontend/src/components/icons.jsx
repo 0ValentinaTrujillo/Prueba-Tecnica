@@ -127,6 +127,28 @@ export function ChevronDownIcon(props) {
   );
 }
 
+/** Ojo abierto: mostrar la contraseña. */
+export function EyeIcon(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+/** Ojo tachado: ocultar la contraseña. */
+export function EyeOffIcon(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M9.9 4.24A10.94 10.94 0 0 1 12 4c6.5 0 10 7 10 7a13.5 13.5 0 0 1-2.16 3.19" />
+      <path d="M6.5 6.65C3.8 8.4 2 11.5 2 11.5s3.5 7 10 7a10.5 10.5 0 0 0 4.05-.8" />
+      <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" />
+      <path d="m2 2 20 20" />
+    </svg>
+  );
+}
+
 /** Triángulo de aviso: cabecera de los modales de confirmación. */
 export function AlertIcon(props) {
   return (

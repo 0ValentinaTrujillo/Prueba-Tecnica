@@ -4,6 +4,11 @@ export const NOTE_STATUSES = [
   { value: 'hecho', label: 'Hecho' },
 ];
 
+export const ROLE_OPTIONS = [
+  { value: 'user', label: 'Usuario' },
+  { value: 'admin', label: 'Administrador' },
+];
+
 // Paleta pastel del tablero. Al crear una nota se elige un color al azar.
 export const NOTE_COLORS = [
   '#cdb4db', // púrpura

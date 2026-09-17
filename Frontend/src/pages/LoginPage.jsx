@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import PasswordInput from '../components/PasswordInput.jsx';
 
 const DEMO_ACCOUNTS = [
   { label: 'Administrador', email: 'admin@demo.com', password: 'Admin123!' },
@@ -120,7 +121,7 @@ export default function LoginPage() {
         </div>
 
         <form className="login-form" onSubmit={handleSubmit} noValidate>
-          <h1 className="login-title">LOGIN</h1>
+          <h1 className="login-title">Login</h1>
           <p className="login-subtitle">
             Accede al portal de equipo: tablero, métricas y usuarios.
           </p>
@@ -144,9 +145,8 @@ export default function LoginPage() {
           <label className="login-label" htmlFor="password">
             Contraseña
           </label>
-          <input
+          <PasswordInput
             id="password"
-            type="password"
             className={fieldClass}
             placeholder="Contraseña"
             autoComplete="current-password"
@@ -173,7 +173,7 @@ export default function LoginPage() {
               <button
                 key={account.email}
                 type="button"
-                className="btn btn-ghost btn-small"
+                className="btn btn-logout btn-small"
                 onClick={() => useDemoAccount(account)}
               >
                 {account.label} · {account.email}
