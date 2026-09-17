@@ -3,6 +3,8 @@ dist/
 build/
 .env
 .env.local
+Backend/.env
+Frontend/.env.local
 *.log
 .DS_Store
 .aws-sam/
