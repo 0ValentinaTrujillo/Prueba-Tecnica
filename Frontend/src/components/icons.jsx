@@ -86,3 +86,54 @@ export function SpinnerIcon(props) {
     </svg>
   );
 }
+
+/** Cruz: botón de crear/añadir. */
+export function PlusIcon(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M12 5v14" />
+      <path d="M5 12h14" />
+    </svg>
+  );
+}
+
+/** Tres líneas: botón de menú en móvil. */
+export function MenuIcon(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M4 6h16" />
+      <path d="M4 12h16" />
+      <path d="M4 18h16" />
+    </svg>
+  );
+}
+
+/** Aspa: cierra el menú de móvil. */
+export function CloseIcon(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M18 6 6 18" />
+      <path d="m6 6 12 12" />
+    </svg>
+  );
+}
+
+/** Flecha simple hacia abajo: indicador de los desplegables. */
+export function ChevronDownIcon(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  );
+}
+
+/** Triángulo de aviso: cabecera de los modales de confirmación. */
+export function AlertIcon(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="m10.29 3.86-8.18 14.14A1.5 1.5 0 0 0 3.4 20.2h17.2a1.5 1.5 0 0 0 1.3-2.2L13.71 3.86a1.5 1.5 0 0 0-2.6 0Z" />
+      <path d="M12 9v4" />
+      <path d="M12 17h.01" />
+    </svg>
+  );
+}

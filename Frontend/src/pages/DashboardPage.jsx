@@ -78,6 +78,15 @@ function MetricCard({ metric, label, count, index }) {
   );
 }
 
+/** Identificador técnico que manda la API → texto legible para el usuario. */
+const SOURCE_LABELS = {
+  'aws-lambda:metrics': 'Función de métricas (AWS Lambda)',
+};
+
+function formatSource(source) {
+  return SOURCE_LABELS[source] ?? source;
+}
+
 /** "16 sept 2026, 18:42" */
 function formatTimestamp(value) {
   return new Date(value).toLocaleString('es-ES', {
@@ -132,7 +141,7 @@ export default function DashboardPage() {
     <section className="page dashboard">
       <header className="page-header">
         <div>
-          <h1 className="page-title">Dashboard</h1>
+          <h1>Estadísticas</h1>
           <p className="page-subtitle">
             Métricas calculadas por la función AWS Lambda a partir de las notas del tablero.
           </p>
@@ -184,7 +193,7 @@ export default function DashboardPage() {
 
           <footer className="dashboard-meta">
             <ClockIcon className="dashboard-meta-icon" />
-            {metrics.source} · actualizado {formatTimestamp(metrics.generatedAt)}
+            {formatSource(metrics.source)} · actualizado {formatTimestamp(metrics.generatedAt)}
           </footer>
         </div>
       )}

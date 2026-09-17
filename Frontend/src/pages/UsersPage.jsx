@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import CreateUserModal from '../components/CreateUserModal.jsx';
+import Pagination from '../components/Pagination.jsx';
+import { PlusIcon } from '../components/icons.jsx';
 
-const EMPTY_FORM = { name: '', email: '', password: '', role: 'user' };
+const PAGE_SIZE = 10;
 
 export default function UsersPage() {
   const { user: currentUser, handleAuthError } = useAuth();
@@ -11,9 +14,18 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
-  const [form, setForm] = useState(EMPTY_FORM);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [page, setPage] = useState(1);
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({ name: '', email: '', role: 'user', password: '' });
+
+  const totalPages = Math.max(1, Math.ceil(users.length / PAGE_SIZE));
+  const pagedUsers = users.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  // Si la página actual queda vacía (p. ej. tras borrar el último usuario de la última página), retrocede.
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
 
   const load = useCallback(async () => {
     try {
@@ -34,17 +46,16 @@ export default function UsersPage() {
     if (!handleAuthError(err)) setError(err.message);
   }
 
-  async function handleCreate(event) {
-    event.preventDefault();
+  async function handleCreateUser(payload) {
     setError('');
     setMessage('');
     try {
-      const { user } = await api.createUser(form);
+      const { user } = await api.createUser(payload);
       setUsers((current) => [...current, user]);
-      setForm(EMPTY_FORM);
       setMessage(`Usuario ${user.email} creado. Ya puede iniciar sesión con su contraseña.`);
     } catch (err) {
-      report(err);
+      if (handleAuthError(err)) return;
+      throw err;
     }
   }
 
@@ -89,53 +100,23 @@ export default function UsersPage() {
             Alta, edición, rol y estado. Siempre debe quedar al menos un administrador activo.
           </p>
         </div>
+
+        <div className="page-actions">
+          <button type="button" className="btn-refresh" onClick={() => setCreateOpen(true)}>
+            <PlusIcon className="btn-refresh-icon" />
+            Crear
+          </button>
+        </div>
       </header>
 
       {error && <p className="form-error">{error}</p>}
       {message && <p className="form-success">{message}</p>}
 
-      <article className="panel">
-        <h2>Nuevo usuario</h2>
-        <form className="inline-form" onSubmit={handleCreate}>
-          <input
-            placeholder="Nombre"
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            required
-          />
-          <input
-            type="email"
-            placeholder="Correo electrónico"
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-            required
-          />
-          <input
-            type="password"
-            placeholder="Contraseña (mín. 8)"
-            minLength={8}
-            value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-            required
-          />
-          <select
-            value={form.role}
-            onChange={(e) => setForm({ ...form, role: e.target.value })}
-          >
-            <option value="user">Usuario</option>
-            <option value="admin">Administrador</option>
-          </select>
-          <button type="submit" className="btn btn-primary">
-            Crear
-          </button>
-        </form>
-      </article>
-
-      <article className="panel">
-        <h2>Listado</h2>
+      <article>
         {loading ? (
           <div className="centered-state">Cargando usuarios…</div>
         ) : (
+          <div className="table-scroll">
           <table className="table">
             <thead>
               <tr>
@@ -143,11 +124,11 @@ export default function UsersPage() {
                 <th>Correo</th>
                 <th>Rol</th>
                 <th>Estado</th>
-                <th aria-label="Acciones" />
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {users.map((user) =>
+              {pagedUsers.map((user) =>
                 editingId === user.id ? (
                   <tr key={user.id}>
                     <td>
@@ -237,8 +218,25 @@ export default function UsersPage() {
               )}
             </tbody>
           </table>
+          </div>
+        )}
+
+        {!loading && users.length > 0 && (
+          <Pagination
+            page={page}
+            pageSize={PAGE_SIZE}
+            total={users.length}
+            onPageChange={setPage}
+            label="usuarios"
+          />
         )}
       </article>
+
+      <CreateUserModal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onCreate={handleCreateUser}
+      />
     </section>
   );
 }

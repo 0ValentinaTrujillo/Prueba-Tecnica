@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { DEFAULT_NOTE_COLOR, NOTE_STATUSES } from '../constants.js';
+import StatusSelect from './StatusSelect.jsx';
 
 /**
  * Nota tipo post-it. El título, el texto y el estado se editan sobre la propia
@@ -36,7 +37,7 @@ export default function NoteCard({ note, dragging, onDragStart, onSave, onDelete
         background: note.color ?? DEFAULT_NOTE_COLOR,
       }}
     >
-      <header className="note-handle" onMouseDown={(event) => onDragStart(event, note)}>
+      <header className="note-handle" onPointerDown={(event) => onDragStart(event, note)}>
         <span className="note-grip" aria-hidden="true">
           ⠿
         </span>
@@ -61,22 +62,15 @@ export default function NoteCard({ note, dragging, onDragStart, onSave, onDelete
         onChange={(e) => setDraft({ ...draft, text: e.target.value })}
       />
 
-      <select
-        className="note-status"
+      <StatusSelect
         value={draft.status}
-        onChange={(e) => setDraft({ ...draft, status: e.target.value })}
-      >
-        {NOTE_STATUSES.map((status) => (
-          <option key={status.value} value={status.value}>
-            {status.label}
-          </option>
-        ))}
-      </select>
+        onChange={(status) => setDraft({ ...draft, status })}
+      />
 
       <footer className="note-actions">
         <button
           type="button"
-          className="btn btn-primary btn-small"
+          className="btn btn-secondary btn-small"
           onClick={handleSave}
           disabled={!dirty || saving}
         >

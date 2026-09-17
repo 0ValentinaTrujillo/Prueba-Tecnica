@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import NoteCard from '../components/NoteCard.jsx';
+import ConfirmDialog from '../components/ConfirmDialog.jsx';
+import { PlusIcon } from '../components/icons.jsx';
 import { NOTE_COLORS } from '../constants.js';
 
 const NOTE_WIDTH = 240;
@@ -20,6 +22,7 @@ export default function BoardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [draggingId, setDraggingId] = useState(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState(null);
 
   const load = useCallback(async () => {
     try {
@@ -36,9 +39,11 @@ export default function BoardPage() {
     load();
   }, [load]);
 
-  // --- Arrastrar y soltar -------------------------------------------------
+  // --- Arrastrar y soltar ---------------------------------------------------
+  // Pointer Events unifica mouse y touch: así el arrastre también funciona
+  // con el dedo en móvil/tablet, sin duplicar la lógica para cada uno.
   const handleDragStart = useCallback((event, note) => {
-    // Solo botón izquierdo y solo desde la cabecera de la nota.
+    // Solo botón izquierdo (o contacto táctil) y solo desde la cabecera de la nota.
     if (event.button !== 0) return;
     event.preventDefault();
 
@@ -55,7 +60,7 @@ export default function BoardPage() {
   useEffect(() => {
     if (!draggingId) return undefined;
 
-    function onMouseMove(event) {
+    function onPointerMove(event) {
       const drag = dragRef.current;
       if (!drag) return;
       const canvasRect = canvasRef.current.getBoundingClientRect();
@@ -69,7 +74,7 @@ export default function BoardPage() {
       );
     }
 
-    async function onMouseUp() {
+    async function onPointerUp() {
       const drag = dragRef.current;
       dragRef.current = null;
       setDraggingId(null);
@@ -85,11 +90,11 @@ export default function BoardPage() {
       }
     }
 
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('mouseup', onMouseUp);
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
     return () => {
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mouseup', onMouseUp);
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
     };
   }, [draggingId, handleAuthError, load]);
 
@@ -124,8 +129,9 @@ export default function BoardPage() {
     }
   }
 
-  async function handleDelete(id) {
-    if (!window.confirm('¿Eliminar esta nota?')) return;
+  async function confirmDelete() {
+    const id = pendingDeleteId;
+    setPendingDeleteId(null);
     setError('');
     try {
       await api.deleteNote(id);
@@ -148,7 +154,8 @@ export default function BoardPage() {
           <button type="button" className="btn btn-ghost" onClick={load}>
             Recargar
           </button>
-          <button type="button" className="btn btn-primary" onClick={handleCreate}>
+          <button type="button" className="btn-refresh" onClick={handleCreate}>
+            <PlusIcon className="btn-refresh-icon" />
             Nueva nota
           </button>
         </div>
@@ -170,7 +177,7 @@ export default function BoardPage() {
               dragging={draggingId === note.id}
               onDragStart={handleDragStart}
               onSave={handleSave}
-              onDelete={handleDelete}
+              onDelete={setPendingDeleteId}
             />
           ))}
 
@@ -181,6 +188,15 @@ export default function BoardPage() {
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        open={pendingDeleteId !== null}
+        title="Eliminar nota"
+        message="¿Eliminar esta nota? Esta acción no se puede deshacer."
+        confirmLabel="Eliminar"
+        onConfirm={confirmDelete}
+        onCancel={() => setPendingDeleteId(null)}
+      />
     </section>
   );
 }
